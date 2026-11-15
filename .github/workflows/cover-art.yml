@@ -1,0 +1,31 @@
+# 公版經典封面：到兩個 CC0 開放典藏（芝加哥藝術博物館、大都會博物館）找適合的公有領域畫作，
+# 下載預覽圖到 cover-art-candidates 分支，挑好之後再放進 assets/covers。
+# 公開 repo 的 Linux 機器免費；結果放在 cover-art-candidates 分支，不會動到網站。
+name: Cover art candidates
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 搜尋並下載候選畫作
+        run: node .github/scripts/fetch-cover-candidates.mjs
+      - name: 推到 cover-art-candidates 分支
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan cover-art-candidates
+          git rm -rf --cached . > /dev/null
+          git add cover-candidates
+          git commit -m "Cover art candidates (CC0 public-domain artwork)"
+          git push -f origin cover-art-candidates
