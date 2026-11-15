@@ -5,6 +5,15 @@ name: Cover art candidates
 
 on:
   workflow_dispatch:
+    inputs:
+      queries:
+        description: "選填：JSON {書籍ID: [搜尋字…]}，不填就用預設"
+        required: false
+        default: ""
+      round:
+        description: "結果資料夾名稱"
+        required: false
+        default: "round1"
 
 permissions:
   contents: write
@@ -18,7 +27,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: 先取回之前的候選圖
+        run: git fetch origin cover-art-candidates && git checkout origin/cover-art-candidates -- cover-candidates || true
       - name: 搜尋並下載候選畫作
+        env:
+          QUERIES_JSON: ${{ inputs.queries }}
+          ROUND: ${{ inputs.round }}
+          PER_QUERY: "4"
         run: node .github/scripts/fetch-cover-candidates.mjs
       - name: 推到 cover-art-candidates 分支
         run: |

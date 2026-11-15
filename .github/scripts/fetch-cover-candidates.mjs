@@ -10,9 +10,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const OUT = path.resolve('cover-candidates');
+const OUT = path.resolve('cover-candidates', process.env.ROUND || 'round1');
 const UA = 'StoryFlip-cover-fetch/1.0 (storyflip-app.github.io)';
-const QUERIES = {
+const DEFAULT_QUERIES = {
   'pride-and-prejudice': ['portrait young woman 1810', 'English country house landscape', 'regency lady portrait'],
   frankenstein: ['glacier mountains', 'Mont Blanc', 'stormy sea night'],
   'wizard-of-oz': ['prairie farm', 'Kansas landscape', 'cyclone storm plains'],
@@ -24,6 +24,8 @@ const QUERIES = {
   'the-open-window': ['open window garden', 'country house window', 'French window lawn'],
   'dream-of-an-hour': ['woman at window spring', 'spring blossom trees', 'woman looking out window'],
 };
+
+const QUERIES = process.env.QUERIES_JSON ? JSON.parse(process.env.QUERIES_JSON) : DEFAULT_QUERIES;
 
 async function json(url, headers = {}) {
   const r = await fetch(url, { headers: { 'User-Agent': UA, ...headers } });
@@ -42,7 +44,7 @@ async function aic(q) {
   const res = await json(`https://api.artic.edu/api/v1/artworks/search?${params}`, { 'AIC-User-Agent': UA });
   return res.data
     .filter((a) => a.is_public_domain && a.image_id)
-    .slice(0, 3)
+    .slice(0, Number(process.env.PER_QUERY || 3))
     .map((a) => ({
       source: 'aic',
       id: a.id,
